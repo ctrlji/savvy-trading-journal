@@ -2,7 +2,7 @@
   "name": "Savvy Trading Journal",
   "short_name": "SavvyTradeJournal",
   "description": "Track, Analyze, and Improve Your Trading Performance",
-  "start_url": "./trading-journal.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#7c3aed",
