@@ -327,21 +327,26 @@
 
         // Calculate P&L
         function calculatePnL(pips, lotSize, instrument) {
-            const pipValues = {
-                'BTCUSD': 10,
-                'ETHUSD': 10,
-                'XAUUSD': 1,
-                'EURUSD': 10,
-                'GBPUSD': 10,
-                'USDJPY': 9.09,
-                'AUDUSD': 10,
-                'NZDUSD': 10,
-                'USDCAD': 7.69,
-                'USDCHF': 10
-            };
-
-            const pipValue = pipValues[instrument] || 10;
-            return pips * lotSize * pipValue;
+            // Convert price difference to pips based on instrument
+            let pipsMultiplier = 10000; // Default for most forex pairs (4 decimal places)
+            
+            if (instrument === 'USDJPY') {
+            pipsMultiplier = 100; // JPY pairs use 2 decimal places
+            } else if (instrument === 'XAUUSD') {
+            pipsMultiplier = 100; // Gold uses 2 decimal places
+            } else if (instrument === 'BTCUSD' || instrument === 'ETHUSD') {
+            pipsMultiplier = 1; // Crypto - each point is $1
+            }
+            
+            // Calculate actual pips from price difference
+            const actualPips = pips * pipsMultiplier;
+            
+            // Standard lot = 100,000 units
+            // Pip value for standard lot on most pairs = $10
+            // Pip value = (0.0001 / exchange rate) × lot size × 100,000
+            const pipValue = 10; // $10 per pip for standard lot
+            
+            return actualPips * lotSize * pipValue;
         }
 
         // Handle form submission
