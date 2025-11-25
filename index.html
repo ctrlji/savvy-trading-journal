@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Savvy Trading Journal</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Track, Analyze, and Improve Your Trading Performance">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Savvy Trading Journal">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📊</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%237c3aed'/><text y='0.9em' x='0.1em' font-size='90'>📊</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        input[type="file"]::-webkit-file-upload-button {
+            margin-right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: rgb(168, 85, 247);
+            color: white;
+            cursor: pointer;
+        }
+        input[type="file"]::-webkit-file-upload-button:hover {
+            background-color: rgb(147, 51, 234);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4 pb-20">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8 pt-6">
+            <h1 class="text-5xl font-bold text-white mb-2">
+                <span class="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Savvy Trading Journal
+                </span>
+            </h1>
+            <p class="text-purple-300">Track, Analyze, and Improve Your Trading Performance</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <!-- Total P&L -->
+            <div class="stat-card bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                <div class="flex items-center justify-between mb-2">
+                    <i data-lucide="dollar-sign" class="w-8 h-8 text-purple-400"></i>
+                </div>
+                <div id="totalPnL" class="text-2xl font-bold text-white">$0.00</div>
+                <div class="text-sm text-purple-200">Total P&L</div>
+            </div>
+
+            <!-- Week P&L -->
+            <div class="stat-card bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                <div class="flex items-center justify-between mb-2">
+                    <i data-lucide="calendar" class="w-8 h-8 text-blue-400"></i>
+                </div>
+                <div id="weekPnL" class="text-2xl font-bold text-white">$0.00</div>
+                <div class="text-sm text-purple-200">This Week</div>
+            </div>
+
+            <!-- Win Rate -->
+            <div class="stat-card bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                <div class="flex items-center justify-between mb-2">
+                    <i data-lucide="target" class="w-8 h-8 text-green-400"></i>
+                </div>
+                <div id="winRate" class="text-2xl font-bold text-white">0%</div>
+                <div class="text-sm text-purple-200">Win Rate</div>
+            </div>
+
+            <!-- Avg R:R -->
+            <div class="stat-card bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
+                <div class="flex items-center justify-between mb-2">
+                    <i data-lucide="bar-chart-3" class="w-8 h-8 text-yellow-400"></i>
+                </div>
+                <div id="avgRR" class="text-2xl font-bold text-white">1:0.00</div>
+                <div class="text-sm text-purple-200">Avg R:R</div>
+            </div>
+        </div>
+
+        <!-- Add Trade Button -->
+        <div class="mb-8">
+            <button id="addTradeBtn" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-2xl transition-all flex items-center justify-center gap-2">
+                <i data-lucide="plus-circle" class="w-6 h-6"></i>
+                Log New Trade
+            </button>
+        </div>
+
+        <!-- Trade Form -->
+        <div id="tradeForm" class="hidden mb-8">
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <h2 class="text-2xl font-bold text-white mb-6">New Trade Entry</h2>
+                <div class="space-y-4">
+                    <!-- Instrument & Lot Size -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-purple-200 mb-2 font-medium">Instrument *</label>
+                            <select id="instrument" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <option value="">Select Instrument</option>
+                                <option value="BTCUSD">BTCUSD</option>
+                                <option value="ETHUSD">ETHUSD</option>
+                                <option value="XAUUSD">XAUUSD (Gold)</option>
+                                <option value="EURUSD">EURUSD</option>
+                                <option value="GBPUSD">GBPUSD</option>
+                                <option value="USDJPY">USDJPY</option>
+                                <option value="AUDUSD">AUDUSD</option>
+                                <option value="NZDUSD">NZDUSD</option>
+                                <option value="USDCAD">USDCAD</option>
+                                <option value="USDCHF">USDCHF</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-purple-200 mb-2 font-medium">Lot Size *</label>
+                            <input type="number" id="lotSize" step="0.01" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="0.01">
+                        </div>
+                    </div>
+
+                    <!-- Entry, SL, TP, Exit -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-purple-200 mb-2 font-medium">Entry Price *</label>
+                            <input type="number" id="entry" step="0.00001" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="0.00000">
+                        </div>
+
+                        <div>
+                            <label class="block text-purple-200 mb-2 font-medium">Stop Loss *</label>
+                            <input type="number" id="sl" step="0.00001" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="0.00000">
+                        </div>
+
+                        <div>
+                            <label class="block text-purple-200 mb-2 font-medium">Take Profit *</label>
+                            <input type="number" id="tp" step="0.00001" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="0.00000">
+                        </div>
+
+                        <div>
+                            <label class="block text-purple-200 mb-2 font-medium">Exit Price *</label>
+                            <input type="number" id="exitPrice" step="0.00001" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="0.00000">
+                        </div>
+                    </div>
+
+                    <!-- Risk:Reward Preview -->
+                    <div id="rrPreview" class="hidden bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-xl p-4 border border-purple-400/30">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i data-lucide="shield" class="w-5 h-5 text-purple-400"></i>
+                                <span class="text-purple-200 font-medium">Risk:Reward Ratio</span>
+                            </div>
+                            <span id="rrRatio" class="text-2xl font-bold text-white">1:0.00</span>
+                        </div>
+                        <div id="rrDetails" class="mt-2 text-sm text-purple-300"></div>
+                    </div>
+
+                    <!-- Trade Reason -->
+                    <div>
+                        <label class="block text-purple-200 mb-2 font-medium">Trade Reason *</label>
+                        <textarea id="reason" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 h-24" placeholder="Why did you take this trade? (Setup, confluence, strategy, etc.)"></textarea>
+                    </div>
+
+                    <!-- Screenshot Upload -->
+                    <div>
+                        <label class="block text-purple-200 mb-2 font-medium">
+                            <i data-lucide="camera" class="w-4 h-4 inline mr-2"></i>
+                            Trade Screenshot (Optional)
+                        </label>
+                        <input type="file" id="screenshot" accept="image/*" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <div id="previewContainer" class="hidden mt-3">
+                            <img id="previewImage" src="" alt="Preview" class="w-full h-48 object-cover rounded-xl border border-white/20">
+                        </div>
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <label class="block text-purple-200 mb-2 font-medium">Date *</label>
+                        <input type="date" id="date" class="w-full bg-white/5 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex gap-3">
+                        <button id="submitBtn" class="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all">
+                            Calculate & Save Trade
+                        </button>
+                        <button id="cancelBtn" class="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 px-6 rounded-xl transition-all border border-white/20">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade History -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+            <h2 class="text-2xl font-bold text-white mb-6">Trade History</h2>
+            <div id="tradesList"></div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let trades = [];
+        let previewImageData = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide icons after DOM is ready
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+            
+            loadTrades();
+            updateStats();
+            renderTrades();
+            initializeForm();
+            
+            // Set today's date as default
+            document.getElementById('date').valueAsDate = new Date();
+        });
+
+        // Load trades from localStorage
+        function loadTrades() {
+            const stored = localStorage.getItem('trades-data');
+            if (stored) {
+                trades = JSON.parse(stored);
+            }
+        }
+
+        // Save trades to localStorage
+        function saveTrades() {
+            localStorage.setItem('trades-data', JSON.stringify(trades));
+        }
+
+        // Initialize form handlers
+        function initializeForm() {
+            document.getElementById('addTradeBtn').addEventListener('click', () => {
+                document.getElementById('tradeForm').classList.remove('hidden');
+                document.getElementById('addTradeBtn').classList.add('hidden');
+            });
+
+            document.getElementById('cancelBtn').addEventListener('click', () => {
+                resetForm();
+                document.getElementById('tradeForm').classList.add('hidden');
+                document.getElementById('addTradeBtn').classList.remove('hidden');
+            });
+
+            document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+
+            // Screenshot upload
+            document.getElementById('screenshot').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        previewImageData = reader.result;
+                        document.getElementById('previewImage').src = reader.result;
+                        document.getElementById('previewContainer').classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Risk:Reward preview
+            ['entry', 'sl', 'tp'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateRRPreview);
+            });
+        }
+
+        // Update Risk:Reward preview
+        function updateRRPreview() {
+            const entry = parseFloat(document.getElementById('entry').value);
+            const sl = parseFloat(document.getElementById('sl').value);
+            const tp = parseFloat(document.getElementById('tp').value);
+
+            if (entry && sl && tp) {
+                const rr = calculateRiskReward(entry, sl, tp);
+                const risk = Math.abs(entry - sl).toFixed(5);
+                const reward = Math.abs(tp - entry).toFixed(5);
+                
+                document.getElementById('rrRatio').textContent = `1:${rr}`;
+                document.getElementById('rrDetails').textContent = `Risk: ${risk} pips | Reward: ${reward} pips`;
+                document.getElementById('rrPreview').classList.remove('hidden');
+            } else {
+                document.getElementById('rrPreview').classList.add('hidden');
+            }
+        }
+
+        // Calculate Risk:Reward
+        function calculateRiskReward(entry, sl, tp) {
+            const risk = Math.abs(entry - sl);
+            const reward = Math.abs(tp - entry);
+            return (reward / risk).toFixed(2);
+        }
+
+        // Calculate trade outcome
+        function calculateTradeOutcome(entry, sl, tp, exitPrice) {
+            const isLong = tp > entry;
+            
+            if (isLong) {
+                if (exitPrice >= tp) return { outcome: 'TP', pips: Math.abs(tp - entry) };
+                if (exitPrice <= sl) return { outcome: 'SL', pips: -Math.abs(entry - sl) };
+            } else {
+                if (exitPrice <= tp) return { outcome: 'TP', pips: Math.abs(entry - tp) };
+                if (exitPrice >= sl) return { outcome: 'SL', pips: -Math.abs(sl - entry) };
+            }
+            
+            return { outcome: 'Partial', pips: isLong ? (exitPrice - entry) : (entry - exitPrice) };
+        }
+
+        // Calculate P&L
+        function calculatePnL(pips, lotSize, instrument) {
+            const pipValues = {
+                'BTCUSD': 10,
+                'ETHUSD': 10,
+                'XAUUSD': 1,
+                'EURUSD': 10,
+                'GBPUSD': 10,
+                'USDJPY': 9.09,
+                'AUDUSD': 10,
+                'NZDUSD': 10,
+                'USDCAD': 7.69,
+                'USDCHF': 10
+            };
+
+            const pipValue = pipValues[instrument] || 10;
+            return pips * lotSize * pipValue;
+        }
+
+        // Handle form submission
+        function handleSubmit() {
+            const instrument = document.getElementById('instrument').value;
+            const reason = document.getElementById('reason').value;
+            const entry = parseFloat(document.getElementById('entry').value);
+            const sl = parseFloat(document.getElementById('sl').value);
+            const tp = parseFloat(document.getElementById('tp').value);
+            const lotSize = parseFloat(document.getElementById('lotSize').value);
+            const exitPrice = parseFloat(document.getElementById('exitPrice').value);
+            const date = document.getElementById('date').value;
+
+            if (!instrument || !reason || !entry || !sl || !tp || !lotSize || !exitPrice || !date) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const { outcome, pips } = calculateTradeOutcome(entry, sl, tp, exitPrice);
+            const pnl = calculatePnL(pips, lotSize, instrument);
+            const riskReward = calculateRiskReward(entry, sl, tp);
+
+            const newTrade = {
+                id: Date.now(),
+                instrument,
+                reason,
+                entry,
+                sl,
+                tp,
+                lotSize,
+                exitPrice,
+                outcome,
+                pips: pips.toFixed(1),
+                pnl,
+                riskReward,
+                screenshot: previewImageData,
+                date
+            };
+
+            trades.unshift(newTrade);
+            saveTrades();
+            updateStats();
+            renderTrades();
+            resetForm();
+            
+            document.getElementById('tradeForm').classList.add('hidden');
+            document.getElementById('addTradeBtn').classList.remove('hidden');
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('instrument').value = '';
+            document.getElementById('reason').value = '';
+            document.getElementById('entry').value = '';
+            document.getElementById('sl').value = '';
+            document.getElementById('tp').value = '';
+            document.getElementById('lotSize').value = '';
+            document.getElementById('exitPrice').value = '';
+            document.getElementById('screenshot').value = '';
+            document.getElementById('date').valueAsDate = new Date();
+            document.getElementById('previewContainer').classList.add('hidden');
+            document.getElementById('rrPreview').classList.add('hidden');
+            previewImageData = null;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalPnL = trades.reduce((sum, t) => sum + t.pnl, 0);
+            
+            const weekAgo = new Date();
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const weekPnL = trades
+                .filter(t => new Date(t.date) >= weekAgo)
+                .reduce((sum, t) => sum + t.pnl, 0);
+
+            const winRate = trades.length === 0 ? 0 : 
+                ((trades.filter(t => t.outcome === 'TP').length / trades.length) * 100).toFixed(1);
+
+            const avgRR = trades.length === 0 ? 0 :
+                (trades.reduce((acc, t) => acc + parseFloat(t.riskReward), 0) / trades.length).toFixed(2);
+
+            const totalColor = totalPnL >= 0 ? 'text-green-400' : 'text-red-400';
+            const weekColor = weekPnL >= 0 ? 'text-green-400' : 'text-red-400';
+
+            document.getElementById('totalPnL').innerHTML = `<span class="${totalColor}">${totalPnL >= 0 ? '+' : ''}$${totalPnL.toFixed(2)}</span>`;
+            document.getElementById('weekPnL').innerHTML = `<span class="${weekColor}">${weekPnL >= 0 ? '+' : ''}$${weekPnL.toFixed(2)}</span>`;
+            document.getElementById('winRate').textContent = `${winRate}%`;
+            document.getElementById('avgRR').textContent = `1:${avgRR}`;
+        }
+
+        // Render trades
+        function renderTrades() {
+            const container = document.getElementById('tradesList');
+            
+            if (trades.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-purple-200">
+                        <i data-lucide="bar-chart-3" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+                        <p>No trades yet. Start logging your trades!</p>
+                    </div>
+                `;
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+                return;
+            }
+
+            container.innerHTML = trades.map(trade => `
+                <div class="bg-white/5 rounded-xl p-4 border border-white/10 hover:bg-white/10 transition-all mb-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <span class="text-xl font-bold text-white">${trade.instrument}</span>
+                            <span class="ml-3 px-3 py-1 rounded-full text-sm font-medium ${
+                                trade.outcome === 'TP' ? 'bg-green-500/20 text-green-400' : 
+                                trade.outcome === 'SL' ? 'bg-red-500/20 text-red-400' :
+                                'bg-yellow-500/20 text-yellow-400'
+                            }">
+                                ${trade.outcome === 'TP' ? '✓ Hit TP' : 
+                                  trade.outcome === 'SL' ? '✗ Hit SL' : '◐ Partial'}
+                            </span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold ${trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                ${trade.pnl >= 0 ? '+' : ''}$${trade.pnl.toFixed(2)}
+                            </div>
+                            <div class="text-sm text-purple-200">${trade.pips} pips</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3 text-sm">
+                        <div class="bg-white/5 rounded px-2 py-1">
+                            <span class="text-purple-300 text-xs">Entry:</span>
+                            <span class="text-white ml-1 block font-medium">${trade.entry}</span>
+                        </div>
+                        <div class="bg-white/5 rounded px-2 py-1">
+                            <span class="text-purple-300 text-xs">SL:</span>
+                            <span class="text-white ml-1 block font-medium">${trade.sl}</span>
+                        </div>
+                        <div class="bg-white/5 rounded px-2 py-1">
+                            <span class="text-purple-300 text-xs">TP:</span>
+                            <span class="text-white ml-1 block font-medium">${trade.tp}</span>
+                        </div>
+                        <div class="bg-white/5 rounded px-2 py-1">
+                            <span class="text-purple-300 text-xs">Exit:</span>
+                            <span class="text-white ml-1 block font-medium">${trade.exitPrice}</span>
+                        </div>
+                        <div class="bg-white/5 rounded px-2 py-1">
+                            <span class="text-purple-300 text-xs">Lot:</span>
+                            <span class="text-white ml-1 block font-medium">${trade.lotSize}</span>
+                        </div>
+                        <div class="bg-purple-500/20 rounded px-2 py-1 border border-purple-400/30">
+                            <span class="text-purple-300 text-xs">R:R:</span>
+                            <span class="text-purple-100 ml-1 block font-bold">1:${trade.riskReward}</span>
+                        </div>
+                    </div>
+                    
+                    ${trade.screenshot ? `
+                        <div class="mb-3">
+                            <img src="${trade.screenshot}" alt="Trade screenshot" class="w-full h-48 object-cover rounded-lg border border-white/20">
+                        </div>
+                    ` : ''}
+                    
+                    <p class="text-purple-200 text-sm">
+                        <span class="font-medium">Reason:</span> ${trade.reason}
+                    </p>
+                    <p class="text-purple-300 text-xs mt-1">${trade.date}</p>
+                </div>
+            `).join('');
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+    </script>
+</body>
+</html>
